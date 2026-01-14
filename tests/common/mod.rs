@@ -16,3 +16,4 @@
 //! Common test utilities shared across integration tests.
 
 pub mod db_helpers;
+pub mod db_tests_impl;
