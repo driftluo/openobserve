@@ -22,6 +22,7 @@ pub enum MetaStore {
     Nats,
     MySQL,
     PostgreSQL,
+    OceanBase,
 }
 
 impl From<&str> for MetaStore {
@@ -31,6 +32,7 @@ impl From<&str> for MetaStore {
             "nats" => Self::Nats,
             "mysql" => Self::MySQL,
             "postgres" | "postgresql" => Self::PostgreSQL,
+            "oceanbase" | "ob" => Self::OceanBase,
             _ => Self::Sqlite,
         }
     }
@@ -49,6 +51,7 @@ impl std::fmt::Display for MetaStore {
             Self::Nats => write!(f, "nats"),
             Self::MySQL => write!(f, "mysql"),
             Self::PostgreSQL => write!(f, "postgresql"),
+            Self::OceanBase => write!(f, "oceanbase"),
         }
     }
 }
@@ -64,9 +67,12 @@ mod tests {
         assert_eq!(MetaStore::from("mysql"), MetaStore::MySQL);
         assert_eq!(MetaStore::from("postgres"), MetaStore::PostgreSQL);
         assert_eq!(MetaStore::from("postgresql"), MetaStore::PostgreSQL);
+        assert_eq!(MetaStore::from("oceanbase"), MetaStore::OceanBase);
+        assert_eq!(MetaStore::from("ob"), MetaStore::OceanBase);
 
         // Case insensitive
         assert_eq!(MetaStore::from("SQLITE"), MetaStore::Sqlite);
+        assert_eq!(MetaStore::from("OCEANBASE"), MetaStore::OceanBase);
 
         // Unknown values default to Sqlite
         assert_eq!(MetaStore::from("unknown"), MetaStore::Sqlite);
@@ -83,6 +89,7 @@ mod tests {
         assert_eq!(MetaStore::Nats.to_string(), "nats");
         assert_eq!(MetaStore::MySQL.to_string(), "mysql");
         assert_eq!(MetaStore::PostgreSQL.to_string(), "postgresql");
+        assert_eq!(MetaStore::OceanBase.to_string(), "oceanbase");
     }
 
     #[test]

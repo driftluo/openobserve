@@ -2540,9 +2540,11 @@ fn check_common_config(cfg: &mut Config) -> Result<(), anyhow::Error> {
     if !cfg.common.local_mode
         && !cfg.common.meta_store.starts_with("postgres")
         && !cfg.common.meta_store.starts_with("mysql")
+        && !cfg.common.meta_store.starts_with("oceanbase")
+        && cfg.common.meta_store != "ob"
     {
         return Err(anyhow::anyhow!(
-            "Meta store only support mysql or postgres in cluster mode."
+            "Meta store only support mysql, postgres or oceanbase in cluster mode."
         ));
     }
     if cfg.common.meta_store.starts_with("postgres") && cfg.common.meta_postgres_dsn.is_empty() {
@@ -2553,6 +2555,13 @@ fn check_common_config(cfg: &mut Config) -> Result<(), anyhow::Error> {
     if cfg.common.meta_store.starts_with("mysql") && cfg.common.meta_mysql_dsn.is_empty() {
         return Err(anyhow::anyhow!(
             "Meta store is MySQL, you must set ZO_META_MYSQL_DSN"
+        ));
+    }
+    if (cfg.common.meta_store.starts_with("oceanbase") || cfg.common.meta_store == "ob")
+        && cfg.common.meta_mysql_dsn.is_empty()
+    {
+        return Err(anyhow::anyhow!(
+            "Meta store is OceanBase, you must set ZO_META_MYSQL_DSN"
         ));
     }
 

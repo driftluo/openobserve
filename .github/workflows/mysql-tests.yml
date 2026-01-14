@@ -1,0 +1,153 @@
+name: MySQL/OceanBase Integration Tests
+
+on:
+  push:
+    branches:
+      - "main"
+    paths:
+      - "tests/db_mysql_tests.rs"
+      - "tests/db_oceanbase_tests.rs"
+      - "tests/common/**"
+      - "Cargo.toml"
+      - ".github/workflows/mysql-tests.yml"
+  pull_request:
+    branches:
+      - "*"
+    paths:
+      - "tests/db_mysql_tests.rs"
+      - "tests/db_oceanbase_tests.rs"
+      - "tests/common/**"
+      - "Cargo.toml"
+      - ".github/workflows/mysql-tests.yml"
+  # Allow manual trigger
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  COLUMNS: 150
+
+jobs:
+  mysql_integration_tests:
+    name: MySQL Integration Tests
+    runs-on: ubicloud-standard-4
+    permissions:
+      contents: read
+
+    steps:
+      - name: Remove unused tools
+        run: |
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /opt/ghc
+          sudo rm -rf "/usr/local/share/boost"
+          sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+
+      - name: Checkout git repo
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Setup Rust Toolchain
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: nightly-2025-11-11
+
+      - name: Setup Rust Cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          cache-on-failure: true
+          prefix-key: mysql-tests
+
+      - name: Install Protoc
+        uses: arduino/setup-protoc@v3
+        with:
+          version: "21.12"
+
+      - name: Run MySQL Integration Tests
+        run: |
+          cargo test --test db_mysql_tests --features db-mysql-tests \
+            -- --test-threads=1 --nocapture 2>&1 | tee mysql_tests.log
+        timeout-minutes: 15
+
+      - name: Upload test logs on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mysql-test-logs
+          path: mysql_tests.log
+          retention-days: 5
+
+  oceanbase_integration_tests:
+    name: OceanBase Integration Tests
+    runs-on: ubicloud-standard-4
+    permissions:
+      contents: read
+
+    steps:
+      - name: Remove unused tools
+        run: |
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /opt/ghc
+          sudo rm -rf "/usr/local/share/boost"
+          sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+
+      - name: Checkout git repo
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Setup Rust Toolchain
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: nightly-2025-11-11
+
+      - name: Setup Rust Cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          cache-on-failure: true
+          prefix-key: oceanbase-tests
+
+      - name: Install Protoc
+        uses: arduino/setup-protoc@v3
+        with:
+          version: "21.12"
+
+      - name: Run OceanBase Integration Tests
+        run: |
+          cargo test --test db_oceanbase_tests --features db-oceanbase-tests \
+            -- --test-threads=1 --nocapture 2>&1 | tee oceanbase_tests.log
+        timeout-minutes: 15
+
+      - name: Upload test logs on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: oceanbase-test-logs
+          path: oceanbase_tests.log
+          retention-days: 5
+
+  mysql_tests_summary:
+    runs-on: ubuntu-latest
+    permissions: {}
+    needs: [mysql_integration_tests, oceanbase_integration_tests]
+    if: always()
+    steps:
+      - name: Check test results
+        run: |
+          MYSQL_RESULT="${{ needs.mysql_integration_tests.result }}"
+          OCEANBASE_RESULT="${{ needs.oceanbase_integration_tests.result }}"
+
+          if [ "$MYSQL_RESULT" == "success" ] && [ "$OCEANBASE_RESULT" == "success" ]; then
+            echo "All MySQL/OceanBase integration tests passed"
+            exit 0
+          elif [ "$MYSQL_RESULT" == "skipped" ] && [ "$OCEANBASE_RESULT" == "skipped" ]; then
+            echo "All tests skipped"
+            exit 0
+          else
+            echo "Some tests failed:"
+            echo "  MySQL tests: $MYSQL_RESULT"
+            echo "  OceanBase tests: $OCEANBASE_RESULT"
+            exit 1
+          fi

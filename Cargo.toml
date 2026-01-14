@@ -30,6 +30,9 @@ jemalloc = ["dep:tikv-jemallocator"]
 profiling = ["dep:pprof"]
 pyroscope = ["dep:pyroscope", "dep:pyroscope_pprofrs"]
 tokio-console = ["dep:console-subscriber"]
+# Database integration tests (requires real database instances)
+db-mysql-tests = []
+db-oceanbase-tests = []
 
 [profile.release]
 debug = false
@@ -198,6 +201,9 @@ expect-test.workspace = true
 base64 = "0.22"
 float-cmp = "0.10"
 rcgen = "0.14.4"
+# MySQL/OceanBase integration tests
+serial_test = "3.1"
+sqlx.workspace = true
 
 [workspace]
 members = [

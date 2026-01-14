@@ -38,7 +38,7 @@ pub fn connect_default() -> Box<dyn FileList> {
     match config::get_config().common.meta_store.as_str().into() {
         MetaStore::Sqlite => Box::<sqlite::SqliteFileList>::default(),
         MetaStore::Nats => Box::<sqlite::SqliteFileList>::default(),
-        MetaStore::MySQL => Box::<mysql::MysqlFileList>::default(),
+        MetaStore::MySQL | MetaStore::OceanBase => Box::<mysql::MysqlFileList>::default(),
         MetaStore::PostgreSQL => Box::<postgres::PostgresFileList>::default(),
     }
 }
