@@ -13,12 +13,15 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-//! OceanBase integration tests for MysqlDb trait implementation.
+//! OceanBase integration tests for OceanBaseDb trait implementation.
 //!
-//! These tests verify the MysqlDb implementation of the Db trait
+//! These tests verify the OceanBaseDb implementation of the Db trait
 //! using real OceanBase database connections.
 //!
-//! Default connection: mysql://root:vdthink88@10.10.14.64:2881/openobserve_test
+//! OceanBaseDb uses NATS distributed locks instead of MySQL GET_LOCK
+//! for compatibility with OceanBase versions prior to V4.2.0.
+//!
+//! Default connection: mysql://root:oceanbase123@10.10.14.64:2881/openobserve_test
 //!
 //! # Running Tests
 //!
@@ -38,7 +41,7 @@ mod common;
 
 use common::db_helpers::{init_config_for_oceanbase_tests, RealOceanBaseInstance};
 use common::db_tests_impl;
-use infra::db::mysql::MysqlDb;
+use infra::db::oceanbase::OceanBaseDb;
 use once_cell::sync::Lazy;
 use serial_test::serial;
 
@@ -53,10 +56,10 @@ static TEST_RUNTIME: Lazy<tokio::runtime::Runtime> = Lazy::new(|| {
 });
 
 /// Setup test environment and return (db, prefix)
-async fn setup_test() -> (MysqlDb, String) {
+async fn setup_test() -> (OceanBaseDb, String) {
     init_config_for_oceanbase_tests();
     let _ = RealOceanBaseInstance::new().await; // Ensures schema and truncation
-    let db = MysqlDb::new();
+    let db = OceanBaseDb::new();
     let prefix = format!("oceanbase_{}", std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
         .unwrap()
@@ -65,7 +68,7 @@ async fn setup_test() -> (MysqlDb, String) {
 }
 
 // ==================== Schema Tests ====================
-
+ 
 mod schema_tests {
     use super::*;
 
