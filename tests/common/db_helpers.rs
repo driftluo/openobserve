@@ -36,14 +36,14 @@ macro_rules! define_db_test_instance {
     (
         $struct_name:ident,
         $feature:literal,
-        $schema_flag:ident,
+        // $schema_flag:ident,
         $default_dsn:literal,
         $env_var:literal,
         $db_display_name:literal
     ) => {
-        #[cfg(feature = $feature)]
-        #[allow(dead_code)]
-        static $schema_flag: AtomicBool = AtomicBool::new(false);
+        // #[cfg(feature = $feature)]
+        // #[allow(dead_code)]
+        // static $schema_flag: AtomicBool = AtomicBool::new(false);
 
         #[doc = concat!("Real ", $db_display_name, " instance connection for integration testing.")]
         #[doc = "Use environment variable or default to the test instance."]
@@ -61,13 +61,13 @@ macro_rules! define_db_test_instance {
 
             #[doc = concat!("Creates a connection to a real ", $db_display_name, " instance.")]
             #[doc = concat!("Uses ", $env_var, " environment variable or defaults to test instance.")]
-            pub async fn new() -> Self {
+            pub async fn new(db: Option<&str>) -> Self {
                 let dsn = std::env::var($env_var)
                     .unwrap_or_else(|_| Self::DEFAULT_DSN.to_string());
 
                 // First connect without database to create it if needed
                 let base_dsn = dsn.rsplit_once('/').map(|(base, _)| base).unwrap_or(&dsn);
-                let db_name = dsn.rsplit_once('/').map(|(_, db)| db).unwrap_or("openobserve_test");
+                let db_name = db.unwrap_or(dsn.rsplit_once('/').map(|(_, db)| db).unwrap_or("openobserve_test"));
 
                 // Connect to server (without specific database)
 
@@ -107,10 +107,10 @@ macro_rules! define_db_test_instance {
                     .connect_lazy_with(db_opts);
 
                 // Create schema only once using atomic flag
-                if !$schema_flag.load(Ordering::SeqCst) {
+                // if !$schema_flag.load(Ordering::SeqCst) {
                     Self::create_schema(&pool).await;
-                    $schema_flag.store(true, Ordering::SeqCst);
-                }
+                    // $schema_flag.store(true, Ordering::SeqCst);
+                // }
 
                 // Always truncate to ensure clean state for each test
                 sqlx::query("TRUNCATE TABLE meta")
@@ -193,7 +193,7 @@ macro_rules! define_db_test_instance {
 define_db_test_instance!(
     RealMySqlInstance,
     "db-mysql-tests",
-    MYSQL_SCHEMA_INITIALIZED,
+    // MYSQL_SCHEMA_INITIALIZED,
     "mysql://root:oceanbase123@10.10.14.64:2881/openobserve_test",
     "ZO_TEST_MYSQL_DSN",
     "MySQL"
@@ -203,7 +203,7 @@ define_db_test_instance!(
 define_db_test_instance!(
     RealOceanBaseInstance,
     "db-oceanbase-tests",
-    OCEANBASE_SCHEMA_INITIALIZED,
+    // OCEANBASE_SCHEMA_INITIALIZED,
     "mysql://root:oceanbase123@10.10.14.66:2881/openobserve_test",
     "ZO_TEST_OCEANBASE_DSN",
     "OceanBase"

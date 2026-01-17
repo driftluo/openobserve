@@ -205,7 +205,6 @@ base64 = "0.22"
 float-cmp = "0.10"
 rcgen = "0.14.4"
 # MySQL/OceanBase integration tests
-serial_test = "3.1"
 sqlx.workspace = true
 
 [workspace]
