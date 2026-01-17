@@ -36,8 +36,10 @@
 
 mod common;
 
-use common::db_helpers::{init_config_for_mysql_tests, RealMySqlInstance};
-use common::db_tests_impl;
+use common::{
+    db_helpers::{RealMySqlInstance, init_config_for_mysql_tests},
+    db_tests_impl,
+};
 use infra::db::mysql::MysqlDb;
 use once_cell::sync::Lazy;
 use serial_test::serial;
@@ -57,10 +59,13 @@ async fn setup_test() -> (MysqlDb, String) {
     init_config_for_mysql_tests();
     let _ = RealMySqlInstance::new().await; // Ensures schema and truncation
     let db = MysqlDb::new();
-    let prefix = format!("mysql_{}", std::time::SystemTime::now()
-        .duration_since(std::time::UNIX_EPOCH)
-        .unwrap()
-        .as_micros());
+    let prefix = format!(
+        "mysql_{}",
+        std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_micros()
+    );
     (db, prefix)
 }
 
@@ -150,7 +155,8 @@ mod get_for_update_tests {
     fn test_get_for_update_without_start_dt_gets_latest() {
         TEST_RUNTIME.block_on(async {
             let (db, prefix) = setup_test().await;
-            db_tests_impl::test_get_for_update_without_start_dt_gets_latest_impl(&db, &prefix).await;
+            db_tests_impl::test_get_for_update_without_start_dt_gets_latest_impl(&db, &prefix)
+                .await;
         });
     }
 

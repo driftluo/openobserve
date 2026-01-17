@@ -654,15 +654,22 @@ pub async fn test_concurrent_two_clients_same_key_impl(db: &impl Db, prefix: &st
     let key1 = key.clone();
     let key2 = key.clone();
 
+    let (tx, rx) = tokio::sync::oneshot::channel::<()>();
+
     let task1 = tokio::spawn(async move {
         let db = get_db().await;
         let start = std::time::Instant::now();
 
         let update_fn: Box<infra::db::UpdateFn> = Box::new(|value: Option<Bytes>| {
+            tx.send(()).unwrap();
             let val: i32 = value
                 .map(|v| String::from_utf8_lossy(&v).parse().unwrap_or(0))
                 .unwrap_or(0);
-            std::thread::sleep(std::time::Duration::from_millis(100));
+            // Force a task refresh; otherwise, new spawns may be blocked and not scheduled for
+            // execution.
+            tokio::task::block_in_place(|| {
+                std::thread::sleep(std::time::Duration::from_millis(100))
+            });
             Ok(Some((Some(Bytes::from((val + 1).to_string())), None)))
         });
 
@@ -672,7 +679,7 @@ pub async fn test_concurrent_two_clients_same_key_impl(db: &impl Db, prefix: &st
     });
 
     let task2 = tokio::spawn(async move {
-        tokio::time::sleep(tokio::time::Duration::from_millis(20)).await;
+        rx.await.unwrap();
         let db = get_db().await;
         let start = std::time::Instant::now();
 
@@ -695,9 +702,14 @@ pub async fn test_concurrent_two_clients_same_key_impl(db: &impl Db, prefix: &st
     r2.expect(&format!("{} should succeed", name2));
 
     assert!(
-        elapsed2.as_millis() >= 80,
+        elapsed2.as_millis() >= 100,
         "Task 2 should have waited for lock. Elapsed: {:?}",
-        elapsed2
+        elapsed2,
+    );
+    assert!(
+        elapsed1.as_millis() >= 100,
+        "Task 1 should take at least 100ms. Elapsed: {:?}",
+        elapsed1
     );
 
     let final_val = db.get(&key).await.expect("Final get failed");
@@ -1264,17 +1276,24 @@ pub async fn test_long_running_update_fn_impl(db: &impl Db, prefix: &str) {
 
     let start_time = std::time::Instant::now();
 
+    let (tx, rx) = tokio::sync::oneshot::channel::<()>();
+
     let task1 = tokio::spawn(async move {
         let db = get_db().await;
         let update_fn: Box<infra::db::UpdateFn> = Box::new(|_value: Option<Bytes>| {
-            std::thread::sleep(std::time::Duration::from_millis(200));
+            tx.send(()).unwrap();
+            // Force a task refresh; otherwise, new spawns may be blocked and not scheduled for
+            // execution.
+            tokio::task::block_in_place(|| {
+                std::thread::sleep(std::time::Duration::from_millis(200))
+            });
             Ok(Some((Some(Bytes::from("slow_update")), None)))
         });
         db.get_for_update(&key1, false, Some(0), update_fn).await
     });
 
     let task2 = tokio::spawn(async move {
-        tokio::time::sleep(tokio::time::Duration::from_millis(50)).await;
+        rx.await.unwrap();
         let start = std::time::Instant::now();
         let db = get_db().await;
         let update_fn: Box<infra::db::UpdateFn> =
@@ -1293,9 +1312,14 @@ pub async fn test_long_running_update_fn_impl(db: &impl Db, prefix: &str) {
     let total_time = start_time.elapsed();
 
     assert!(
-        task2_wait.as_millis() >= 100,
+        task2_wait.as_millis() >= 200,
         "Task 2 should have waited for lock. Wait time: {:?}",
         task2_wait
+    );
+    assert!(
+        total_time.as_millis() >= 200,
+        "Total time should reflect long update_fn. Total time: {:?}",
+        total_time
     );
 
     println!("✓ Long running update_fn test passed");
@@ -1343,6 +1367,13 @@ pub async fn test_concurrent_with_different_start_dt_impl(db: &impl Db, prefix: 
         .await
         .expect("Task 2 panicked")
         .expect("Task 2 failed");
+
+    let final_val = db.get(&key).await.expect("Get with start_dt 100 failed");
+    assert_eq!(
+        final_val,
+        Bytes::from("v200_updated"),
+        "Value at start_dt 200 should be updated"
+    );
 
     println!("✓ Concurrent with different start_dt test passed");
 }
