@@ -1,5 +1,5 @@
 // Copyright 2025 OpenObserve Inc.
-//
+
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
@@ -47,7 +47,10 @@
 
 mod common;
 
-use common::{db_helpers::init_config_for_mysql_tests, table_compat_tests_impl};
+use common::{
+    db_helpers::{RealMySqlInstance, init_config_for_mysql_tests},
+    table_compat_tests_impl,
+};
 use once_cell::sync::Lazy;
 
 // ==================== Global Runtime ====================
@@ -61,7 +64,8 @@ static TEST_RUNTIME: Lazy<tokio::runtime::Runtime> = Lazy::new(|| {
 });
 
 /// Generate a unique test prefix based on timestamp
-fn generate_test_prefix() -> String {
+async fn generate_test_prefix() -> String {
+    let _ = RealMySqlInstance::new(None).await;
     format!(
         "test_mysql_{}",
         std::time::SystemTime::now()
@@ -79,7 +83,7 @@ fn generate_test_prefix() -> String {
 fn test_mysql_organizations_compat() {
     TEST_RUNTIME.block_on(async {
         init_config_for_mysql_tests();
-        let prefix = generate_test_prefix();
+        let prefix = generate_test_prefix().await;
         table_compat_tests_impl::test_organizations_compat_impl(&prefix).await;
     });
 }
@@ -90,7 +94,7 @@ fn test_mysql_organizations_compat() {
 fn test_mysql_users_compat() {
     TEST_RUNTIME.block_on(async {
         init_config_for_mysql_tests();
-        let prefix = generate_test_prefix();
+        let prefix = generate_test_prefix().await;
         table_compat_tests_impl::test_users_compat_impl(&prefix).await;
     });
 }
@@ -101,7 +105,7 @@ fn test_mysql_users_compat() {
 fn test_mysql_templates_compat() {
     TEST_RUNTIME.block_on(async {
         init_config_for_mysql_tests();
-        let prefix = generate_test_prefix();
+        let prefix = generate_test_prefix().await;
         table_compat_tests_impl::test_templates_compat_impl(&prefix).await;
     });
 }
@@ -112,7 +116,7 @@ fn test_mysql_templates_compat() {
 fn test_mysql_short_urls_compat() {
     TEST_RUNTIME.block_on(async {
         init_config_for_mysql_tests();
-        let prefix = generate_test_prefix();
+        let prefix = generate_test_prefix().await;
         table_compat_tests_impl::test_short_urls_compat_impl(&prefix).await;
     });
 }
@@ -123,7 +127,7 @@ fn test_mysql_short_urls_compat() {
 fn test_mysql_sessions_compat() {
     TEST_RUNTIME.block_on(async {
         init_config_for_mysql_tests();
-        let prefix = generate_test_prefix();
+        let prefix = generate_test_prefix().await;
         table_compat_tests_impl::test_sessions_compat_impl(&prefix).await;
     });
 }
@@ -134,7 +138,7 @@ fn test_mysql_sessions_compat() {
 fn test_mysql_system_prompts_compat() {
     TEST_RUNTIME.block_on(async {
         init_config_for_mysql_tests();
-        let prefix = generate_test_prefix();
+        let prefix = generate_test_prefix().await;
         table_compat_tests_impl::test_system_prompts_compat_impl(&prefix).await;
     });
 }
@@ -145,7 +149,7 @@ fn test_mysql_system_prompts_compat() {
 fn test_mysql_distinct_values_compat() {
     TEST_RUNTIME.block_on(async {
         init_config_for_mysql_tests();
-        let prefix = generate_test_prefix();
+        let prefix = generate_test_prefix().await;
         table_compat_tests_impl::test_distinct_values_compat_impl(&prefix).await;
     });
 }
@@ -158,7 +162,7 @@ fn test_mysql_distinct_values_compat() {
 fn test_mysql_org_users_compat() {
     TEST_RUNTIME.block_on(async {
         init_config_for_mysql_tests();
-        let prefix = generate_test_prefix();
+        let prefix = generate_test_prefix().await;
         table_compat_tests_impl::test_org_users_compat_impl(&prefix).await;
     });
 }
@@ -169,7 +173,7 @@ fn test_mysql_org_users_compat() {
 fn test_mysql_folders_compat() {
     TEST_RUNTIME.block_on(async {
         init_config_for_mysql_tests();
-        let prefix = generate_test_prefix();
+        let prefix = generate_test_prefix().await;
         table_compat_tests_impl::test_folders_compat_impl(&prefix).await;
     });
 }
@@ -180,7 +184,7 @@ fn test_mysql_folders_compat() {
 fn test_mysql_destinations_compat() {
     TEST_RUNTIME.block_on(async {
         init_config_for_mysql_tests();
-        let prefix = generate_test_prefix();
+        let prefix = generate_test_prefix().await;
         table_compat_tests_impl::test_destinations_compat_impl(&prefix).await;
     });
 }
@@ -193,7 +197,7 @@ fn test_mysql_destinations_compat() {
 fn test_mysql_alerts_compat() {
     TEST_RUNTIME.block_on(async {
         init_config_for_mysql_tests();
-        let prefix = generate_test_prefix();
+        let prefix = generate_test_prefix().await;
         table_compat_tests_impl::test_alerts_compat_impl(&prefix).await;
     });
 }
@@ -204,7 +208,7 @@ fn test_mysql_alerts_compat() {
 fn test_mysql_dashboards_compat() {
     TEST_RUNTIME.block_on(async {
         init_config_for_mysql_tests();
-        let prefix = generate_test_prefix();
+        let prefix = generate_test_prefix().await;
         table_compat_tests_impl::test_dashboards_compat_impl(&prefix).await;
     });
 }
@@ -217,7 +221,7 @@ fn test_mysql_dashboards_compat() {
 fn test_mysql_file_list_compat() {
     TEST_RUNTIME.block_on(async {
         init_config_for_mysql_tests();
-        let prefix = generate_test_prefix();
+        let prefix = generate_test_prefix().await;
         table_compat_tests_impl::test_file_list_compat_impl(&prefix).await;
     });
 }
@@ -228,7 +232,7 @@ fn test_mysql_file_list_compat() {
 fn test_mysql_stream_stats_compat() {
     TEST_RUNTIME.block_on(async {
         init_config_for_mysql_tests();
-        let prefix = generate_test_prefix();
+        let prefix = generate_test_prefix().await;
         table_compat_tests_impl::test_stream_stats_compat_impl(&prefix).await;
     });
 }
@@ -239,7 +243,7 @@ fn test_mysql_stream_stats_compat() {
 fn test_mysql_file_list_deleted_compat() {
     TEST_RUNTIME.block_on(async {
         init_config_for_mysql_tests();
-        let prefix = generate_test_prefix();
+        let prefix = generate_test_prefix().await;
         table_compat_tests_impl::test_file_list_deleted_compat_impl(&prefix).await;
     });
 }
@@ -250,7 +254,7 @@ fn test_mysql_file_list_deleted_compat() {
 fn test_mysql_file_list_deleted_concurrent_query_deleted() {
     TEST_RUNTIME.block_on(async {
         init_config_for_mysql_tests();
-        let prefix = generate_test_prefix();
+        let prefix = generate_test_prefix().await;
         table_compat_tests_impl::test_file_list_deleted_concurrent_query_deleted_impl(&prefix)
             .await;
     });
@@ -262,7 +266,7 @@ fn test_mysql_file_list_deleted_concurrent_query_deleted() {
 fn test_mysql_file_list_deleted_lock_serialization() {
     TEST_RUNTIME.block_on(async {
         init_config_for_mysql_tests();
-        let prefix = generate_test_prefix();
+        let prefix = generate_test_prefix().await;
         table_compat_tests_impl::test_file_list_deleted_lock_serialization_impl(&prefix).await;
     });
 }
@@ -273,7 +277,7 @@ fn test_mysql_file_list_deleted_lock_serialization() {
 fn test_mysql_file_list_deleted_concurrent_counter() {
     TEST_RUNTIME.block_on(async {
         init_config_for_mysql_tests();
-        let prefix = generate_test_prefix();
+        let prefix = generate_test_prefix().await;
         table_compat_tests_impl::test_file_list_deleted_concurrent_counter_impl(&prefix).await;
     });
 }
@@ -284,7 +288,7 @@ fn test_mysql_file_list_deleted_concurrent_counter() {
 fn test_mysql_file_list_jobs_compat() {
     TEST_RUNTIME.block_on(async {
         init_config_for_mysql_tests();
-        let prefix = generate_test_prefix();
+        let prefix = generate_test_prefix().await;
         table_compat_tests_impl::test_file_list_jobs_compat_impl(&prefix).await;
     });
 }
@@ -295,7 +299,7 @@ fn test_mysql_file_list_jobs_compat() {
 fn test_mysql_file_list_jobs_concurrent_get_pending() {
     TEST_RUNTIME.block_on(async {
         init_config_for_mysql_tests();
-        let prefix = generate_test_prefix();
+        let prefix = generate_test_prefix().await;
         table_compat_tests_impl::test_file_list_jobs_concurrent_get_pending_impl(&prefix).await;
     });
 }
@@ -306,7 +310,7 @@ fn test_mysql_file_list_jobs_concurrent_get_pending() {
 fn test_mysql_file_list_jobs_concurrent_get_dump_jobs() {
     TEST_RUNTIME.block_on(async {
         init_config_for_mysql_tests();
-        let prefix = generate_test_prefix();
+        let prefix = generate_test_prefix().await;
         table_compat_tests_impl::test_file_list_jobs_concurrent_get_dump_jobs_impl(&prefix).await;
     });
 }
@@ -317,7 +321,7 @@ fn test_mysql_file_list_jobs_concurrent_get_dump_jobs() {
 fn test_mysql_file_list_jobs_lock_serialization() {
     TEST_RUNTIME.block_on(async {
         init_config_for_mysql_tests();
-        let prefix = generate_test_prefix();
+        let prefix = generate_test_prefix().await;
         table_compat_tests_impl::test_file_list_jobs_lock_serialization_impl(&prefix).await;
     });
 }
@@ -328,7 +332,7 @@ fn test_mysql_file_list_jobs_lock_serialization() {
 fn test_mysql_scheduled_jobs_compat() {
     TEST_RUNTIME.block_on(async {
         init_config_for_mysql_tests();
-        let prefix = generate_test_prefix();
+        let prefix = generate_test_prefix().await;
         table_compat_tests_impl::test_scheduled_jobs_compat_impl(&prefix).await;
     });
 }
@@ -339,7 +343,7 @@ fn test_mysql_scheduled_jobs_compat() {
 fn test_mysql_scheduled_jobs_concurrent_pull() {
     TEST_RUNTIME.block_on(async {
         init_config_for_mysql_tests();
-        let prefix = generate_test_prefix();
+        let prefix = generate_test_prefix().await;
         table_compat_tests_impl::test_scheduled_jobs_concurrent_pull_impl(&prefix).await;
     });
 }
@@ -350,7 +354,7 @@ fn test_mysql_scheduled_jobs_concurrent_pull() {
 fn test_mysql_scheduled_jobs_pull_lock_serialization() {
     TEST_RUNTIME.block_on(async {
         init_config_for_mysql_tests();
-        let prefix = generate_test_prefix();
+        let prefix = generate_test_prefix().await;
         table_compat_tests_impl::test_scheduled_jobs_pull_lock_serialization_impl(&prefix).await;
     });
 }
@@ -363,7 +367,7 @@ fn test_mysql_scheduled_jobs_pull_lock_serialization() {
 fn test_mysql_cipher_keys_compat() {
     TEST_RUNTIME.block_on(async {
         init_config_for_mysql_tests();
-        let prefix = generate_test_prefix();
+        let prefix = generate_test_prefix().await;
         table_compat_tests_impl::test_cipher_keys_compat_impl(&prefix).await;
     });
 }
@@ -374,7 +378,7 @@ fn test_mysql_cipher_keys_compat() {
 fn test_mysql_system_settings_compat() {
     TEST_RUNTIME.block_on(async {
         init_config_for_mysql_tests();
-        let prefix = generate_test_prefix();
+        let prefix = generate_test_prefix().await;
         table_compat_tests_impl::test_system_settings_compat_impl(&prefix).await;
     });
 }
@@ -385,7 +389,7 @@ fn test_mysql_system_settings_compat() {
 fn test_mysql_action_scripts_compat() {
     TEST_RUNTIME.block_on(async {
         init_config_for_mysql_tests();
-        let prefix = generate_test_prefix();
+        let prefix = generate_test_prefix().await;
         table_compat_tests_impl::test_action_scripts_compat_impl(&prefix).await;
     });
 }
@@ -396,7 +400,7 @@ fn test_mysql_action_scripts_compat() {
 fn test_mysql_enrichment_tables_compat() {
     TEST_RUNTIME.block_on(async {
         init_config_for_mysql_tests();
-        let prefix = generate_test_prefix();
+        let prefix = generate_test_prefix().await;
         table_compat_tests_impl::test_enrichment_tables_compat_impl(&prefix).await;
     });
 }
@@ -407,7 +411,7 @@ fn test_mysql_enrichment_tables_compat() {
 fn test_mysql_enrichment_table_urls_compat() {
     TEST_RUNTIME.block_on(async {
         init_config_for_mysql_tests();
-        let prefix = generate_test_prefix();
+        let prefix = generate_test_prefix().await;
         table_compat_tests_impl::test_enrichment_table_urls_compat_impl(&prefix).await;
     });
 }
@@ -418,7 +422,7 @@ fn test_mysql_enrichment_table_urls_compat() {
 fn test_mysql_rate_limit_rules_compat() {
     TEST_RUNTIME.block_on(async {
         init_config_for_mysql_tests();
-        let prefix = generate_test_prefix();
+        let prefix = generate_test_prefix().await;
         table_compat_tests_impl::test_rate_limit_rules_compat_impl(&prefix).await;
     });
 }
@@ -429,7 +433,7 @@ fn test_mysql_rate_limit_rules_compat() {
 fn test_mysql_re_patterns_compat() {
     TEST_RUNTIME.block_on(async {
         init_config_for_mysql_tests();
-        let prefix = generate_test_prefix();
+        let prefix = generate_test_prefix().await;
         table_compat_tests_impl::test_re_patterns_compat_impl(&prefix).await;
     });
 }
@@ -440,7 +444,7 @@ fn test_mysql_re_patterns_compat() {
 fn test_mysql_re_pattern_stream_map_compat() {
     TEST_RUNTIME.block_on(async {
         init_config_for_mysql_tests();
-        let prefix = generate_test_prefix();
+        let prefix = generate_test_prefix().await;
         table_compat_tests_impl::test_re_pattern_stream_map_compat_impl(&prefix).await;
     });
 }
@@ -451,7 +455,7 @@ fn test_mysql_re_pattern_stream_map_compat() {
 fn test_mysql_service_streams_compat() {
     TEST_RUNTIME.block_on(async {
         init_config_for_mysql_tests();
-        let prefix = generate_test_prefix();
+        let prefix = generate_test_prefix().await;
         table_compat_tests_impl::test_service_streams_compat_impl(&prefix).await;
     });
 }
@@ -462,7 +466,7 @@ fn test_mysql_service_streams_compat() {
 fn test_mysql_service_streams_dimensions_compat() {
     TEST_RUNTIME.block_on(async {
         init_config_for_mysql_tests();
-        let prefix = generate_test_prefix();
+        let prefix = generate_test_prefix().await;
         table_compat_tests_impl::test_service_streams_dimensions_compat_impl(&prefix).await;
     });
 }
@@ -473,7 +477,7 @@ fn test_mysql_service_streams_dimensions_compat() {
 fn test_mysql_search_queue_compat() {
     TEST_RUNTIME.block_on(async {
         init_config_for_mysql_tests();
-        let prefix = generate_test_prefix();
+        let prefix = generate_test_prefix().await;
         table_compat_tests_impl::test_search_queue_compat_impl(&prefix).await;
     });
 }
@@ -484,7 +488,7 @@ fn test_mysql_search_queue_compat() {
 fn test_mysql_compactor_manual_jobs_compat() {
     TEST_RUNTIME.block_on(async {
         init_config_for_mysql_tests();
-        let prefix = generate_test_prefix();
+        let prefix = generate_test_prefix().await;
         table_compat_tests_impl::test_compactor_manual_jobs_compat_impl(&prefix).await;
     });
 }
@@ -495,7 +499,7 @@ fn test_mysql_compactor_manual_jobs_compat() {
 fn test_mysql_alert_incidents_compat() {
     TEST_RUNTIME.block_on(async {
         init_config_for_mysql_tests();
-        let prefix = generate_test_prefix();
+        let prefix = generate_test_prefix().await;
         table_compat_tests_impl::test_alert_incidents_compat_impl(&prefix).await;
     });
 }
@@ -506,7 +510,7 @@ fn test_mysql_alert_incidents_compat() {
 fn test_mysql_file_list_dump_stats_compat() {
     TEST_RUNTIME.block_on(async {
         init_config_for_mysql_tests();
-        let prefix = generate_test_prefix();
+        let prefix = generate_test_prefix().await;
         table_compat_tests_impl::test_file_list_dump_stats_compat_impl(&prefix).await;
     });
 }
@@ -517,7 +521,7 @@ fn test_mysql_file_list_dump_stats_compat() {
 fn test_mysql_schema_history_compat() {
     TEST_RUNTIME.block_on(async {
         init_config_for_mysql_tests();
-        let prefix = generate_test_prefix();
+        let prefix = generate_test_prefix().await;
         table_compat_tests_impl::test_schema_history_compat_impl(&prefix).await;
     });
 }
@@ -528,7 +532,7 @@ fn test_mysql_schema_history_compat() {
 fn test_mysql_reports_compat() {
     TEST_RUNTIME.block_on(async {
         init_config_for_mysql_tests();
-        let prefix = generate_test_prefix();
+        let prefix = generate_test_prefix().await;
         table_compat_tests_impl::test_reports_compat_impl(&prefix).await;
     });
 }
@@ -539,7 +543,7 @@ fn test_mysql_reports_compat() {
 fn test_mysql_timed_annotations_compat() {
     TEST_RUNTIME.block_on(async {
         init_config_for_mysql_tests();
-        let prefix = generate_test_prefix();
+        let prefix = generate_test_prefix().await;
         table_compat_tests_impl::test_timed_annotations_compat_impl(&prefix).await;
     });
 }
@@ -550,7 +554,7 @@ fn test_mysql_timed_annotations_compat() {
 fn test_mysql_timed_annotation_panels_compat() {
     TEST_RUNTIME.block_on(async {
         init_config_for_mysql_tests();
-        let prefix = generate_test_prefix();
+        let prefix = generate_test_prefix().await;
         table_compat_tests_impl::test_timed_annotation_panels_compat_impl(&prefix).await;
     });
 }
@@ -561,7 +565,7 @@ fn test_mysql_timed_annotation_panels_compat() {
 fn test_mysql_search_jobs_compat() {
     TEST_RUNTIME.block_on(async {
         init_config_for_mysql_tests();
-        let prefix = generate_test_prefix();
+        let prefix = generate_test_prefix().await;
         table_compat_tests_impl::test_search_jobs_compat_impl(&prefix).await;
     });
 }
@@ -572,7 +576,7 @@ fn test_mysql_search_jobs_compat() {
 fn test_mysql_search_job_partitions_compat() {
     TEST_RUNTIME.block_on(async {
         init_config_for_mysql_tests();
-        let prefix = generate_test_prefix();
+        let prefix = generate_test_prefix().await;
         table_compat_tests_impl::test_search_job_partitions_compat_impl(&prefix).await;
     });
 }
@@ -583,7 +587,7 @@ fn test_mysql_search_job_partitions_compat() {
 fn test_mysql_search_job_results_compat() {
     TEST_RUNTIME.block_on(async {
         init_config_for_mysql_tests();
-        let prefix = generate_test_prefix();
+        let prefix = generate_test_prefix().await;
         table_compat_tests_impl::test_search_job_results_compat_impl(&prefix).await;
     });
 }
@@ -594,7 +598,7 @@ fn test_mysql_search_job_results_compat() {
 fn test_mysql_pipeline_compat() {
     TEST_RUNTIME.block_on(async {
         init_config_for_mysql_tests();
-        let prefix = generate_test_prefix();
+        let prefix = generate_test_prefix().await;
         table_compat_tests_impl::test_pipeline_compat_impl(&prefix).await;
     });
 }
@@ -605,7 +609,7 @@ fn test_mysql_pipeline_compat() {
 fn test_mysql_alert_dedup_state_compat() {
     TEST_RUNTIME.block_on(async {
         init_config_for_mysql_tests();
-        let prefix = generate_test_prefix();
+        let prefix = generate_test_prefix().await;
         table_compat_tests_impl::test_alert_dedup_state_compat_impl(&prefix).await;
     });
 }
@@ -616,7 +620,7 @@ fn test_mysql_alert_dedup_state_compat() {
 fn test_mysql_file_list_history_compat() {
     TEST_RUNTIME.block_on(async {
         init_config_for_mysql_tests();
-        let prefix = generate_test_prefix();
+        let prefix = generate_test_prefix().await;
         table_compat_tests_impl::test_file_list_history_compat_impl(&prefix).await;
     });
 }
@@ -627,7 +631,7 @@ fn test_mysql_file_list_history_compat() {
 fn test_mysql_pipeline_last_errors_compat() {
     TEST_RUNTIME.block_on(async {
         init_config_for_mysql_tests();
-        let prefix = generate_test_prefix();
+        let prefix = generate_test_prefix().await;
         table_compat_tests_impl::test_pipeline_last_errors_compat_impl(&prefix).await;
     });
 }
@@ -638,7 +642,7 @@ fn test_mysql_pipeline_last_errors_compat() {
 fn test_mysql_alert_incident_alerts_compat() {
     TEST_RUNTIME.block_on(async {
         init_config_for_mysql_tests();
-        let prefix = generate_test_prefix();
+        let prefix = generate_test_prefix().await;
         table_compat_tests_impl::test_alert_incident_alerts_compat_impl(&prefix).await;
     });
 }
@@ -649,7 +653,7 @@ fn test_mysql_alert_incident_alerts_compat() {
 fn test_mysql_report_dashboards_compat() {
     TEST_RUNTIME.block_on(async {
         init_config_for_mysql_tests();
-        let prefix = generate_test_prefix();
+        let prefix = generate_test_prefix().await;
         table_compat_tests_impl::test_report_dashboards_compat_impl(&prefix).await;
     });
 }

@@ -39,7 +39,8 @@ macro_rules! define_db_test_instance {
         // $schema_flag:ident,
         $default_dsn:literal,
         $env_var:literal,
-        $db_display_name:literal
+        $db_display_name:literal,
+        $is_oceanbase:expr
     ) => {
         // #[cfg(feature = $feature)]
         // #[allow(dead_code)]
@@ -93,6 +94,14 @@ macro_rules! define_db_test_instance {
                     .await
                     .expect("Failed to create test database");
 
+                // Set OceanBase system parameter for testing (only for OceanBase)
+                if $is_oceanbase {
+                    sqlx::query("ALTER SYSTEM SET open_cursors = 10000")
+                        .execute(&server_pool)
+                        .await
+                        .expect("Failed to set open_cursors parameter");
+                }
+
                 // Now connect to the specific database
 
                 // Use same connection options for OceanBase compatibility
@@ -108,7 +117,7 @@ macro_rules! define_db_test_instance {
 
                 // Create schema only once using atomic flag
                 // if !$schema_flag.load(Ordering::SeqCst) {
-                    Self::create_schema(&pool).await;
+                Self::create_schema(&pool).await;
                     // $schema_flag.store(true, Ordering::SeqCst);
                 // }
 
@@ -196,7 +205,8 @@ define_db_test_instance!(
     // MYSQL_SCHEMA_INITIALIZED,
     "mysql://root:oceanbase123@10.10.14.64:2881/openobserve_test",
     "ZO_TEST_MYSQL_DSN",
-    "MySQL"
+    "MySQL",
+    false
 );
 
 // Define OceanBase test instance
@@ -206,7 +216,8 @@ define_db_test_instance!(
     // OCEANBASE_SCHEMA_INITIALIZED,
     "mysql://root:oceanbase123@10.10.14.66:2881/openobserve_test",
     "ZO_TEST_OCEANBASE_DSN",
-    "OceanBase"
+    "OceanBase",
+    true
 );
 
 /// Initialize OpenObserve config for MysqlDb trait testing.

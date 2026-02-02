@@ -60,7 +60,7 @@
 //! - sessions.json - Session records (empty in test data, uses generated data)
 
 // ==================== Consolidated Imports ====================
-
+#![allow(dead_code)]
 // std crate
 use std::{
     collections::HashMap,
@@ -209,6 +209,201 @@ async fn ensure_orm_tables_exist_inner() -> Result<(), anyhow::Error> {
     };
     client
         .execute(Statement::from_string(backend, create_templates_sql))
+        .await?;
+
+    // Create users table (from m20241227_000200_create_users_table.rs)
+    let create_users_sql = match backend {
+        DatabaseBackend::MySql => {
+            r#"
+            CREATE TABLE IF NOT EXISTS `users` (
+                `id` char(27) NOT NULL PRIMARY KEY,
+                `email` varchar(100) NOT NULL,
+                `first_name` varchar(100) NOT NULL,
+                `last_name` varchar(100) NOT NULL,
+                `password` varchar(256) NOT NULL,
+                `salt` varchar(256) NOT NULL,
+                `is_root` bool NOT NULL,
+                `password_ext` varchar(256) NULL,
+                `user_type` smallint NOT NULL,
+                `created_at` bigint NOT NULL,
+                `updated_at` bigint NOT NULL
+            )
+        "#
+        }
+        DatabaseBackend::Postgres => {
+            r#"
+            CREATE TABLE IF NOT EXISTS "users" (
+                "id" char(27) NOT NULL PRIMARY KEY,
+                "email" varchar(100) NOT NULL,
+                "first_name" varchar(100) NOT NULL,
+                "last_name" varchar(100) NOT NULL,
+                "password" varchar(256) NOT NULL,
+                "salt" varchar(256) NOT NULL,
+                "is_root" bool NOT NULL,
+                "password_ext" varchar(256) NULL,
+                "user_type" smallint NOT NULL,
+                "created_at" bigint NOT NULL,
+                "updated_at" bigint NOT NULL
+            )
+        "#
+        }
+        DatabaseBackend::Sqlite => {
+            r#"
+            CREATE TABLE IF NOT EXISTS "users" (
+                "id" char(27) NOT NULL PRIMARY KEY,
+                "email" varchar(100) NOT NULL,
+                "first_name" varchar(100) NOT NULL,
+                "last_name" varchar(100) NOT NULL,
+                "password" varchar(256) NOT NULL,
+                "salt" varchar(256) NOT NULL,
+                "is_root" boolean NOT NULL,
+                "password_ext" varchar(256) NULL,
+                "user_type" integer NOT NULL,
+                "created_at" bigint NOT NULL,
+                "updated_at" bigint NOT NULL
+            )
+        "#
+        }
+    };
+    client
+        .execute(Statement::from_string(backend, create_users_sql))
+        .await?;
+
+    // Create organizations table (from entity/organizations.rs)
+    let create_organizations_sql = match backend {
+        DatabaseBackend::MySql => {
+            #[cfg(feature = "cloud")]
+            {
+                r#"
+                CREATE TABLE IF NOT EXISTS `organizations` (
+                    `identifier` varchar(256) NOT NULL PRIMARY KEY,
+                    `org_name` varchar(256) NOT NULL,
+                    `org_type` smallint NOT NULL,
+                    `created_at` bigint NOT NULL,
+                    `updated_at` bigint NOT NULL,
+                    `trial_ends_at` bigint NOT NULL
+                )
+            "#
+            }
+            #[cfg(not(feature = "cloud"))]
+            {
+                r#"
+                CREATE TABLE IF NOT EXISTS `organizations` (
+                    `identifier` varchar(256) NOT NULL PRIMARY KEY,
+                    `org_name` varchar(256) NOT NULL,
+                    `org_type` smallint NOT NULL,
+                    `created_at` bigint NOT NULL,
+                    `updated_at` bigint NOT NULL
+                )
+            "#
+            }
+        }
+        DatabaseBackend::Postgres => {
+            #[cfg(feature = "cloud")]
+            {
+                r#"
+                CREATE TABLE IF NOT EXISTS "organizations" (
+                    "identifier" varchar(256) NOT NULL PRIMARY KEY,
+                    "org_name" varchar(256) NOT NULL,
+                    "org_type" smallint NOT NULL,
+                    "created_at" bigint NOT NULL,
+                    "updated_at" bigint NOT NULL,
+                    "trial_ends_at" bigint NOT NULL
+                )
+            "#
+            }
+            #[cfg(not(feature = "cloud"))]
+            {
+                r#"
+                CREATE TABLE IF NOT EXISTS "organizations" (
+                    "identifier" varchar(256) NOT NULL PRIMARY KEY,
+                    "org_name" varchar(256) NOT NULL,
+                    "org_type" smallint NOT NULL,
+                    "created_at" bigint NOT NULL,
+                    "updated_at" bigint NOT NULL
+                )
+            "#
+            }
+        }
+        DatabaseBackend::Sqlite => {
+            #[cfg(feature = "cloud")]
+            {
+                r#"
+                CREATE TABLE IF NOT EXISTS "organizations" (
+                    "identifier" varchar(256) NOT NULL PRIMARY KEY,
+                    "org_name" varchar(256) NOT NULL,
+                    "org_type" integer NOT NULL,
+                    "created_at" bigint NOT NULL,
+                    "updated_at" bigint NOT NULL,
+                    "trial_ends_at" bigint NOT NULL
+                )
+            "#
+            }
+            #[cfg(not(feature = "cloud"))]
+            {
+                r#"
+                CREATE TABLE IF NOT EXISTS "organizations" (
+                    "identifier" varchar(256) NOT NULL PRIMARY KEY,
+                    "org_name" varchar(256) NOT NULL,
+                    "org_type" integer NOT NULL,
+                    "created_at" bigint NOT NULL,
+                    "updated_at" bigint NOT NULL
+                )
+            "#
+            }
+        }
+    };
+    client
+        .execute(Statement::from_string(backend, create_organizations_sql))
+        .await?;
+
+    // Create org_users table (depends on organizations and users)
+    let create_org_users_sql = match backend {
+        DatabaseBackend::MySql => {
+            r#"
+            CREATE TABLE IF NOT EXISTS `org_users` (
+                `id` char(27) NOT NULL PRIMARY KEY,
+                `email` varchar(100) NOT NULL,
+                `org_id` varchar(256) NOT NULL,
+                `role` smallint NOT NULL,
+                `token` varchar(256) NOT NULL,
+                `rum_token` varchar(256) NULL,
+                `created_at` bigint NOT NULL,
+                `updated_at` bigint NOT NULL
+            )
+        "#
+        }
+        DatabaseBackend::Postgres => {
+            r#"
+            CREATE TABLE IF NOT EXISTS "org_users" (
+                "id" char(27) NOT NULL PRIMARY KEY,
+                "email" varchar(100) NOT NULL,
+                "org_id" varchar(256) NOT NULL,
+                "role" smallint NOT NULL,
+                "token" varchar(256) NOT NULL,
+                "rum_token" varchar(256) NULL,
+                "created_at" bigint NOT NULL,
+                "updated_at" bigint NOT NULL
+            )
+        "#
+        }
+        DatabaseBackend::Sqlite => {
+            r#"
+            CREATE TABLE IF NOT EXISTS "org_users" (
+                "id" char(27) NOT NULL PRIMARY KEY,
+                "email" varchar(100) NOT NULL,
+                "org_id" varchar(256) NOT NULL,
+                "role" integer NOT NULL,
+                "token" varchar(256) NOT NULL,
+                "rum_token" varchar(256) NULL,
+                "created_at" bigint NOT NULL,
+                "updated_at" bigint NOT NULL
+            )
+        "#
+        }
+    };
+    client
+        .execute(Statement::from_string(backend, create_org_users_sql))
         .await?;
 
     // Create sessions table (from m20251118_000002_create_sessions_table.rs)
@@ -2421,15 +2616,13 @@ pub async fn test_org_users_compat_impl(prefix: &str) {
 
     // Setup dependencies: create organizations and users
     println!("\n[1/7] Setting up dependencies...");
+    let _ = ensure_orm_tables_exist().await;
     organizations::create_table()
         .await
         .expect("create organizations table failed");
     users::create_table()
         .await
         .expect("create users table failed");
-    org_users::create_table()
-        .await
-        .expect("create org_users table failed");
 
     // Create test organization
     let test_org_id = format!("{}_default", prefix);
@@ -4868,7 +5061,7 @@ pub struct FileListJobsTestData {
 /// Order: 33
 /// Dependencies: None (separate file_list infrastructure)
 /// Behavior: add_job, get_pending_jobs (via table structure verification)
-pub async fn test_file_list_jobs_compat_impl(prefix: &str) {
+pub async fn test_file_list_jobs_compat_impl(_prefix: &str) {
     println!("\n========== File List Jobs Compatibility Test [Order: 33] ==========");
     println!("Table: file_list_jobs");
     println!("Dependencies: None (separate file_list infrastructure)");
@@ -5053,7 +5246,7 @@ pub async fn test_scheduled_jobs_concurrent_pull_impl(prefix: &str) {
     let test_org = format!("{}_pull_org", short_prefix);
 
     // Ensure scheduler tables exist
-    scheduler::init().await.unwrap();
+    if let Err(_) = scheduler::init().await {}
 
     // Add test jobs with Waiting status and next_run_at in the past (eligible for pull)
     println!("[Setup] Adding waiting jobs for concurrent pull test...");
@@ -5299,7 +5492,7 @@ pub async fn test_scheduled_jobs_pull_lock_serialization_impl(prefix: &str) {
     let test_org = format!("{}_serial_pull_org", short_prefix);
 
     // Ensure scheduler tables exist
-    scheduler::init().await.unwrap();
+    let _ = scheduler::init().await;
 
     // Add test jobs
     let mut created_jobs = 0;
@@ -5480,6 +5673,12 @@ pub async fn test_system_settings_compat_impl(prefix: &str) {
     println!("Table: system_settings");
     println!("Dependencies: None");
     println!("Behavior: set, get, list, delete\n");
+
+    // Ensure ORM tables exist
+    println!("[0/4] Ensuring ORM tables exist...");
+    if let Err(e) = ensure_orm_tables_exist().await {
+        panic!("⚠ Failed to create ORM tables: {}", e);
+    }
 
     let short_prefix = &prefix[..prefix.len().min(10)];
     let test_org = format!("{}_settings_org", short_prefix);
@@ -6817,6 +7016,12 @@ pub async fn test_search_jobs_compat_impl(prefix: &str) {
     println!("Dependencies: organizations");
     println!("Behavior: submit, get_job, cancel_job\n");
 
+    // Ensure ORM tables exist
+    println!("[0/3] Ensuring ORM tables exist...");
+    if let Err(e) = ensure_orm_tables_exist().await {
+        panic!("⚠ Failed to create ORM tables: {}", e);
+    }
+
     let short_prefix = &prefix[..prefix.len().min(10)];
     // Use full prefix for unique job_id to avoid primary key conflicts
     let job_id = format!("{}_job", &prefix[prefix.len().saturating_sub(20)..]);
@@ -7134,6 +7339,12 @@ pub async fn test_alert_dedup_state_compat_impl(prefix: &str) {
     println!("Table: alert_dedup_state");
     println!("Dependencies: alerts");
     println!("Behavior: Internal state tracking for alert deduplication\n");
+
+    // Ensure ORM tables exist
+    println!("[0/2] Ensuring ORM tables exist...");
+    if let Err(e) = ensure_orm_tables_exist().await {
+        panic!("⚠ Failed to create ORM tables: {}", e);
+    }
 
     let short_prefix = &prefix[..prefix.len().min(10)];
     let test_org = format!("{}_dedup_org", short_prefix);

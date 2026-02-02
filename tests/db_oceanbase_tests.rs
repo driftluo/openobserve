@@ -45,7 +45,6 @@ use common::{
 };
 use infra::db::oceanbase::OceanBaseDb;
 use once_cell::sync::Lazy;
-use serial_test::serial;
 
 // ==================== Global Runtime ====================
 

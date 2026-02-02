@@ -18,7 +18,7 @@
 //! This module contains the core test logic that is shared between
 //! MySQL and OceanBase integration tests. Each test file provides
 //! thin wrappers that call these implementations.
-
+#![allow(dead_code)]
 use std::sync::{
     Arc,
     atomic::{AtomicI32, Ordering as AtomicOrd},
